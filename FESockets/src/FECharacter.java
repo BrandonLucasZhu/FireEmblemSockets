@@ -1,4 +1,6 @@
-import org.apache.poi.*;
+package src;
+
+import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.util.*;
@@ -25,28 +27,37 @@ public class FECharacter {
 	        
 	        Row row = datatypeSheet.getRow(0);
 	        Iterator iterator = row.cellIterator();
-	        Map<String, String> stats = new HashMap<String, String>();
 	        
 	        
-	        while(iterator.hasNext()){
-	             Cell cell = (Cell)iterator.next();
-	             stats.put(cell.getStringCellValue(), "na");
-	        
-	        }
-	        
+	        Map<String, Map> avatar = new HashMap<String, Map>();
+	        String a="A"; //Get first cell of each row
+
 	        for (int i = 1; i <= datatypeSheet.getLastRowNum(); i++) {
 	        	 Row row1 = datatypeSheet.getRow(i);
+	        	 CellReference cellReference = new CellReference(a+i);
+	        	 
+	        	 //Get the char name from cell from spreadsheet
+	        	 Cell charCellName = workbook.getSheetAt(0).getRow(cellReference.getRow()).getCell(0);
+	        	 DataFormatter dataFormatter = new DataFormatter();
+	        	 
+	             
+	        	 Map<String, String> stats = new HashMap<String, String>();
+	        	 
 	        	 for (Cell cell: row1) {
-	        	      
-	        	        if(cell == null) {
-	        	            continue;
-	        	        }
-	        	        
-	        	        System.out.println(cell);
-	        	    }
-	        	
-	            	
-	            	
+	        	     if(cell == null) {
+	        	          continue;
+	        	     }
+	        	     else if (cell.getColumnIndex() != 0) {
+	        	    	 stats.put(dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(0).getCell(cell.getColumnIndex())) , dataFormatter.formatCellValue(cell));
+	        	     }
+	        	 }
+	        	 
+	        	 if (charCellName != null) {
+		        	 //format cell value to a string if not null
+		             String charName = dataFormatter.formatCellValue(charCellName);
+		             avatar.put(charName, stats);
+	        	 }
+	        	 
 	            	/*if (cell!=null) {
 	            	    switch (evaluator.evaluateFormulaCell(cell)) {
 	            	        case Cell.CELL_TYPE_BOOLEAN:
@@ -68,10 +79,10 @@ public class FECharacter {
 	            	        case Cell.CELL_TYPE_FORMULA: 
 	            	            break;
 	            	    }
-	            	*/    
-	            	    
+	            	*/        
 	        }
-	         
+		
+	        System.out.println(avatar);
 	        
             
             /*
