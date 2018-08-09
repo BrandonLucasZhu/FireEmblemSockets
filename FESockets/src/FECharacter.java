@@ -4,115 +4,126 @@ import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.util.*;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Iterator;
 import java.util.Map;
+import java.io.LineNumberReader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 
 public class FECharacter {
 	public static void main(String[] args) {
 		/*File file = new File(".");
 		for(String fileNames : file.list()) System.out.println(fileNames);
 		*/
-		try {
-			FileInputStream file = new FileInputStream(new File("FEHero.xlsx"));
-			
-			//Create Workbook instance holding reference to .xlsx file
-	        Workbook workbook = new XSSFWorkbook(file);
-	        Sheet datatypeSheet = workbook.getSheetAt(0);
-            //Iterator<Row> iterator = datatypeSheet.iterator();
-	        FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-	        
-	        Row row = datatypeSheet.getRow(0);
-	        Iterator iterator = row.cellIterator();
-	        
-	        
-	        Map<String, Map> avatar = new HashMap<String, Map>();
-	        String a="A"; //Get first cell of each row
-
-	        for (int i = 1; i <= datatypeSheet.getLastRowNum(); i++) {
-	        	 Row row1 = datatypeSheet.getRow(i);
-	        	 CellReference cellReference = new CellReference(a+i);
-	        	 
-	        	 //Get the char name from cell from spreadsheet
-	        	 Cell charCellName = workbook.getSheetAt(0).getRow(cellReference.getRow()).getCell(0);
-	        	 DataFormatter dataFormatter = new DataFormatter();
-	        	 
-	             
-	        	 Map<String, String> stats = new HashMap<String, String>();
-	        	 
-	        	 for (Cell cell: row1) {
-	        	     if(cell == null) {
-	        	          continue;
-	        	     }
-	        	     else if (cell.getColumnIndex() != 0) {
-	        	    	 stats.put(dataFormatter.formatCellValue(workbook.getSheetAt(0).getRow(0).getCell(cell.getColumnIndex())) , dataFormatter.formatCellValue(cell));
-	        	     }
-	        	 }
-	        	 
-	        	 if (charCellName != null) {
-		        	 //format cell value to a string if not null
-		             String charName = dataFormatter.formatCellValue(charCellName);
-		             avatar.put(charName, stats);
-	        	 }
-	        	 
-	            	/*if (cell!=null) {
-	            	    switch (evaluator.evaluateFormulaCell(cell)) {
-	            	        case Cell.CELL_TYPE_BOOLEAN:
-	            	            System.out.println(cell.getBooleanCellValue());
-	            	            break;
-	            	        case Cell.CELL_TYPE_NUMERIC:
-	            	            System.out.println(cell.getNumericCellValue());
-	            	            break;
-	            	        case Cell.CELL_TYPE_STRING:
-	            	            System.out.println(cell.getStringCellValue());
-	            	            break;
-	            	        case Cell.CELL_TYPE_BLANK:
-	            	            break;
-	            	        case Cell.CELL_TYPE_ERROR:
-	            	            System.out.println(cell.getErrorCellValue());
-	            	            break;
-
-	            	        // CELL_TYPE_FORMULA will never occur
-	            	        case Cell.CELL_TYPE_FORMULA: 
-	            	            break;
-	            	    }
-	            	*/        
-	        }
+		String csvFile = "FEcsv.csv";
+        String line = "";
+        String cvsSplitBy = ",";
+        Map<String, String> contactNum = new HashMap<>();
+        ServerSocket serverSocket = null; 
 		
-	        System.out.println(avatar);
-	        
-            
-            /*
-            while (iterator.hasNext()) {
+        try (LineNumberReader br = new LineNumberReader(new FileReader(csvFile))) {
 
-                Row currentRow = iterator.next();
-                Iterator<Cell> cellIterator = currentRow.iterator();
-
-                while (cellIterator.hasNext()) {
-
-                    Cell currentCell = cellIterator.next();
-                    //getCellTypeEnum shown as deprecated for version 3.15
-                    //getCellTypeEnum ill be renamed to getCellType starting from version 4.0
-                    if (currentCell.getCellTypeEnum() == CellType.STRING) {
-                        System.out.print(currentCell.getStringCellValue() + "--");
-                    } else if (currentCell.getCellTypeEnum() == CellType.NUMERIC) {
-                        System.out.print(currentCell.getNumericCellValue() + "--");
-                    }
-
-                }
-                System.out.println();
-
+            while ((line = br.readLine()) != null) {
+                // Skip the headings of the CSV file
+            	if (br.getLineNumber() > 1) {
+            		String[] contact = line.split(cvsSplitBy);
+                    contactNum.put(contact[0],contact[1]);
+            	}
             }
-	        */
-	        
-	        file.close();
-			
-		} catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	        
+            
+            try { 
+   	         serverSocket = new ServerSocket(5587); 
+   	        } 
+	   	    catch (IOException e) 
+	   	        { 
+	   	         System.err.println("Could not listen on port: 5587."); 
+	   	         System.exit(1); 
+	   	        } 
+	
+	   	    Socket clientSocket = null; 
+	   	    System.out.println ("Waiting for connection.....");
+	
+	   	    try { 
+	   	         clientSocket = serverSocket.accept(); 
+	   	        } 
+	   	    catch (IOException e) 
+	   	        { 
+	   	         System.err.println("Accept failed."); 
+	   	         System.exit(1); 
+	   	        } 
+            
+            
+            System.out.println ("Connection successful");
+    	    System.out.println ("Waiting for input.....");
+    	    
+    	    Socket socket = serverSocket.accept();
+    	    
+    	    //Sending the response back to the client.
+            OutputStream os = socket.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os);
+            BufferedWriter bw = new BufferedWriter(osw);
+            
+            //Iterate and send contact info
+            for (Map.Entry<String, String> entry : contactNum.entrySet()) {
+                String contactName = entry.getKey();
+                bw.write(contactName);
+                bw.flush();
+                
+                String contactNumVal = entry.getValue();
+                bw.write(contactNumVal);
+                bw.flush();
+            }
+            
+         
+    	    
+
+    	    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), 
+    	                                      true); 
+    	    BufferedReader in = new BufferedReader( 
+    	            new InputStreamReader(clientSocket.getInputStream())); 
+
+    	    String inputLine; 
+
+    	    while ((inputLine = in.readLine()) != null) 
+    	        { 
+    	         System.out.println ("Server: " + inputLine); 
+    	         out.println(inputLine); 
+
+    	         if (inputLine.equals("Bye.")) 
+    	             break; 
+    	        } 
+
+    	    out.close(); 
+    	    in.close(); 
+    	    clientSocket.close(); 
+    	    serverSocket.close(); 
+            
+            
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        
+        
+		
+        
 	}
 }
