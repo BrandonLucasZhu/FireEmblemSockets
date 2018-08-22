@@ -28,26 +28,8 @@ public class MainActivity extends AppCompatActivity {
         msgServer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                client = new Socket();
-                client.connect(
-                        new InetSocketAddress(
-                                "IP-ADDRESS",
-                                ),
-                        5000);
-                in = new BufferedReader(
-                        new InputStreamReader(
-                                client.getInputStream()));
-                printlng = new PrintWriter(
-                        client.getOutputStream());
-                printlng.println(mLongitude);
-                printlng.flush();
-
-                try {
-                    if ((Response = in
-                            .readLine()) != null) {
-            }
-        });
-
-
+                TcpClient createConnection = new TcpClient();
+            });
+        }
     }
 }
